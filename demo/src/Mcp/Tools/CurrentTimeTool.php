@@ -29,7 +29,7 @@ class CurrentTimeTool
      *
      * @param string $format The format of the time, e.g. "Y-m-d H:i:s"
      */
-    #[McpTool(name: 'current-time')]
+    #[McpTool(name: 'current-time', description: 'Returns the current time in UTC.')]
     public function getCurrentTime(string $format = 'Y-m-d H:i:s'): string
     {
         $this->logger->info('CurrentTimeTool called', ['format' => $format]);

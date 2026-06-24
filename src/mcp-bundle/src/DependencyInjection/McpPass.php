@@ -11,6 +11,7 @@
 
 namespace Symfony\AI\McpBundle\DependencyInjection;
 
+use Mcp\Schema\ToolAnnotations;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
@@ -46,5 +47,34 @@ final class McpPass implements CompilerPassInterface
 
         $serviceLocatorRef = ServiceLocatorTagPass::register($container, $serviceReferences);
         $container->getDefinition('mcp.server.builder')->addMethodCall('setContainer', [$serviceLocatorRef]);
+
+        if ($container->getParameter('mcp.use_container')) {
+            $this->addCalls($container);
+        } else {
+            $container->getDefinition('mcp.server.builder')->addMethodCall('setDiscovery', [
+                $container->getParameter('kernel.project_dir'),
+                $container->getParameter('mcp.discovery.scan_dirs'),
+                $container->getParameter('mcp.discovery.exclude_dirs'),
+            ]);
+        }
+    }
+
+    private function addCalls(ContainerBuilder $container): void
+    {
+        foreach ($container->findTaggedServiceIds('mcp.tool') as $toolId => $tags) {
+            $allMcpServices[$toolId] = true;
+
+            foreach ($tags as $tag) {
+                $container->getDefinition('mcp.server.builder')
+                    ->addMethodCall('addTool', [
+                        [new Reference($toolId), $tag['method'] ?? '__invoke'],
+                        $tag['name'] ?? null,
+                        $tag['description'] ?? null,
+                        null !== $tag['annotations'] ? ToolAnnotations::fromArray($tag['annotations']) : null,
+                        $tag['icons'] ?? null,
+                        $tag['meta'] ?? null,
+                    ]);
+            }
+        }
     }
 }

@@ -38,6 +38,7 @@ return static function (DefinitionConfigurator $configurator): void {
                     ->booleanNode('http')->defaultFalse()->end()
                 ->end()
             ->end()
+            ->booleanNode('use_container')->defaultTrue()->end()
             ->arrayNode('discovery')
                 ->addDefaultsIfNotSet()
                 ->children()

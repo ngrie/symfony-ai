@@ -61,6 +61,7 @@ final class McpBundle extends AbstractBundle
         $builder->setParameter('mcp.icons', $config['icons']);
         $builder->setParameter('mcp.pagination_limit', $config['pagination_limit']);
         $builder->setParameter('mcp.instructions', $config['instructions']);
+        $builder->setParameter('mcp.use_container', $config['use_container']);
         $builder->setParameter('mcp.discovery.scan_dirs', $config['discovery']['scan_dirs']);
         $builder->setParameter('mcp.discovery.exclude_dirs', $config['discovery']['exclude_dirs']);
 
@@ -101,7 +102,7 @@ final class McpBundle extends AbstractBundle
     private function registerMcpAttributes(ContainerBuilder $builder): void
     {
         $mcpAttributes = [
-            McpTool::class => 'mcp.tool',
+            // McpTool::class => 'mcp.tool',
             McpPrompt::class => 'mcp.prompt',
             McpResource::class => 'mcp.resource',
             McpResourceTemplate::class => 'mcp.resource_template',
@@ -115,6 +116,21 @@ final class McpBundle extends AbstractBundle
                 }
             );
         }
+
+        $builder->registerAttributeForAutoconfiguration(
+            McpTool::class,
+            static function (ChildDefinition $definition, object $attribute, \Reflector $reflector): void {
+                \assert($attribute instanceof McpTool);
+                $definition->addTag('mcp.tool', [
+                    'method' => $reflector instanceof \ReflectionMethod ? $reflector->getName() : null,
+                    'name' => $attribute->name,
+                    'description' => $attribute->description,
+                    'annotations' => $attribute->annotations?->jsonSerialize(),
+                    'icons' => $attribute->icons,
+                    'meta' => $attribute->meta,
+                ]);
+            }
+        );
     }
 
     /**
